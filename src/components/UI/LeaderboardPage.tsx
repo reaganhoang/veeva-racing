@@ -82,7 +82,7 @@ export default function LeaderboardPage({ onPlay }: Props) {
   return (
     <div
       ref={scrollRef}
-      className="min-h-screen bg-veeva-navy overflow-y-auto"
+      className="h-screen bg-veeva-navy overflow-y-auto"
       style={{ WebkitOverflowScrolling: 'touch' }}
     >
       {/* Animated background stripes */}
