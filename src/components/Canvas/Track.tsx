@@ -2,11 +2,8 @@ import React, { useMemo } from 'react'
 import * as THREE from 'three'
 import { Text } from '@react-three/drei'
 import { RigidBody, CuboidCollider } from '@react-three/rapier'
-import {
-  TRACK_POINTS, ROAD_WIDTH, TRACK_SEGMENTS,
-  ASPHALT_COLOR, GRASS_COLOR, CURB_RED, CURB_WHITE,
-  VEEVA_ORANGE,
-} from '../../lib/constants'
+import { ASPHALT_COLOR, GRASS_COLOR, CURB_RED, CURB_WHITE, VEEVA_ORANGE } from '../../lib/constants'
+import { TRACK_POINTS, ROAD_WIDTH, TRACK_SEGMENTS } from '../../lib/gameConstants'
 
 // ── Build a smooth closed CatmullRom curve ────────────────────────────────────
 export const trackCurve = new THREE.CatmullRomCurve3(TRACK_POINTS, true, 'catmullrom', 0.5)

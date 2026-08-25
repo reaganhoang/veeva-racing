@@ -1,5 +1,5 @@
 import React from 'react'
-import { TOTAL_LAPS } from '../../lib/constants'
+import { TOTAL_LAPS } from '../../lib/gameConstants'
 import { formatTime } from '../../lib/leaderboard'
 
 interface Props {

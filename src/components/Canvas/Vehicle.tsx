@@ -4,12 +4,13 @@ import { useFrame, useThree } from '@react-three/fiber'
 import { RigidBody, CuboidCollider } from '@react-three/rapier'
 import type { RapierRigidBody } from '@react-three/rapier'
 import type { VehicleControls } from '../../hooks/useVehicleControls'
+import { CAR_COLORS } from '../../lib/constants'
 import {
   ENGINE_FORCE, BRAKE_FORCE,
   MAX_SPEED, DOWNFORCE,
   LINEAR_DAMPING, DRIFT_LINEAR_DAMPING,
-  GRASS_DAMPING_MULT, CAR_COLORS,
-} from '../../lib/constants'
+  GRASS_DAMPING_MULT,
+} from '../../lib/gameConstants'
 
 interface TeleportTarget {
   pos: [number, number, number]

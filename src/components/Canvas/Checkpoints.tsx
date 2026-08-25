@@ -5,7 +5,7 @@ import { trackCurve, TRACK_SAMPLES } from './Track'
 import {
   CHECKPOINT_T, CHECKPOINT_RADIUS, FINISH_RADIUS,
   ROAD_WIDTH,
-} from '../../lib/constants'
+} from '../../lib/gameConstants'
 
 interface Props {
   playerPosRef: React.MutableRefObject<[number, number, number]>

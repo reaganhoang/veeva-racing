@@ -21,7 +21,7 @@ import { submitToGoogleSheet, isSheetConfigured, type SubmitPayload } from '../.
 import {
   STARTING_POSITIONS, STARTING_ROTATION_Y,
   TOTAL_LAPS, PHYSICS_GRAVITY,
-} from '../../lib/constants'
+} from '../../lib/gameConstants'
 
 interface Props {
   playerName: string
