@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react'
-import { Trophy, Search, RefreshCw, Loader, Zap, ChevronRight, Clock } from 'lucide-react'
+import { Trophy, Search, RefreshCw, Loader, Zap, ChevronRight, Clock, ChevronLeft } from 'lucide-react'
 import { fetchSheetLeaderboard, isSheetConfigured, type SheetEntry } from '../../lib/googleSheets'
 import { getRawLeaderboard, formatTime, type LeaderboardEntry } from '../../lib/leaderboard'
 
@@ -12,6 +12,7 @@ type Entry = { rank: number; driverName: string; totalTimeMs: number; totalTime:
 const MEDAL_COLOR = ['#FFD700', '#C0C0C0', '#CD7F32']
 const MEDAL_LABEL = ['🥇', '🥈', '🥉']
 const REFRESH_INTERVAL = 30_000
+const PAGE_SIZE = 25
 
 function toEntry(e: SheetEntry | LeaderboardEntry, i: number): Entry {
   if ('totalTime' in e) {
@@ -27,7 +28,9 @@ export default function LeaderboardPage({ onPlay }: Props) {
   const [loading, setLoading]   = useState(false)
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null)
   const [source, setSource]     = useState<'sheet' | 'local'>('sheet')
+  const [page, setPage]         = useState(1)
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const scrollRef = useRef<HTMLDivElement>(null)
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -61,13 +64,27 @@ export default function LeaderboardPage({ onPlay }: Props) {
   useEffect(() => {
     const q = search.toLowerCase().trim()
     setFiltered(q ? entries.filter(e => e.driverName.toLowerCase().includes(q)) : entries)
+    setPage(1)
   }, [search, entries])
 
-  const top3    = filtered.slice(0, 3)
-  const rest    = filtered.slice(3)
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
+  const pageStart  = (page - 1) * PAGE_SIZE
+  const paginated  = filtered.slice(pageStart, pageStart + PAGE_SIZE)
+
+  const top3 = filtered.slice(0, 3)
+
+  function goToPage(p: number) {
+    const next = Math.max(1, Math.min(p, totalPages))
+    setPage(next)
+    scrollRef.current?.scrollTo({ top: 0, behavior: 'smooth' })
+  }
 
   return (
-    <div className="min-h-screen bg-veeva-navy overflow-y-auto">
+    <div
+      ref={scrollRef}
+      className="min-h-screen bg-veeva-navy overflow-y-auto"
+      style={{ WebkitOverflowScrolling: 'touch' }}
+    >
       {/* Animated background stripes */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         {Array.from({ length: 8 }).map((_, i) => (
@@ -101,12 +118,12 @@ export default function LeaderboardPage({ onPlay }: Props) {
           </button>
         </div>
 
-        {/* ── Podium (top 3) ──────────────────────────────────────────────────── */}
-        {!loading && top3.length > 0 && (
+        {/* ── Podium (top 3) — only on page 1, no search active ──────────── */}
+        {!loading && top3.length > 0 && page === 1 && !search && (
           <div className="grid grid-cols-3 gap-3 mb-6">
             {[top3[1], top3[0], top3[2]].map((e, podiumPos) => {
               if (!e) return <div key={podiumPos} />
-              const actualRank = e.rank - 1   // 0-indexed
+              const actualRank = e.rank - 1
               const heights   = ['h-28', 'h-36', 'h-20']
               const glows     = [
                 'shadow-slate-400/20',
@@ -136,7 +153,7 @@ export default function LeaderboardPage({ onPlay }: Props) {
           </div>
         )}
 
-        {/* ── Search + Refresh ────────────────────────────────────────────────── */}
+        {/* ── Search + Refresh ─────────────────────────────────────────────── */}
         <div className="flex gap-2 mb-4">
           <div className="flex-1 relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
@@ -164,8 +181,8 @@ export default function LeaderboardPage({ onPlay }: Props) {
           </button>
         </div>
 
-        {/* ── Full table ──────────────────────────────────────────────────────── */}
-        <div className="bg-white/5 border border-white/10 rounded-2xl overflow-hidden">
+        {/* ── Full table ───────────────────────────────────────────────────── */}
+        <div className="bg-white/5 border border-white/10 rounded-2xl overflow-hidden mb-4">
           {loading && entries.length === 0 ? (
             <div className="flex items-center justify-center py-16">
               <Loader className="w-8 h-8 text-slate-500 animate-spin" />
@@ -185,7 +202,7 @@ export default function LeaderboardPage({ onPlay }: Props) {
                 </tr>
               </thead>
               <tbody>
-                {filtered.map((e, i) => (
+                {paginated.map((e, i) => (
                   <tr key={`${e.driverName}-${e.totalTimeMs}-${i}`}
                     className="border-t border-white/5 hover:bg-white/5 transition">
                     <td className="px-4 py-3 font-bold text-slate-400 text-sm">
@@ -206,8 +223,59 @@ export default function LeaderboardPage({ onPlay }: Props) {
           )}
         </div>
 
-        {/* ── Footer ──────────────────────────────────────────────────────────── */}
-        <div className="flex items-center justify-between mt-4 text-xs text-slate-600">
+        {/* ── Pagination ───────────────────────────────────────────────────── */}
+        {totalPages > 1 && (
+          <div className="flex items-center justify-between mb-6">
+            <button
+              onClick={() => goToPage(page - 1)}
+              disabled={page === 1}
+              className="flex items-center gap-1.5 px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10
+                         rounded-xl text-slate-400 hover:text-white transition disabled:opacity-30 disabled:cursor-not-allowed text-sm"
+            >
+              <ChevronLeft className="w-4 h-4" /> Prev
+            </button>
+
+            <div className="flex items-center gap-1">
+              {Array.from({ length: totalPages }, (_, i) => i + 1)
+                .filter(p => p === 1 || p === totalPages || Math.abs(p - page) <= 1)
+                .reduce<(number | '…')[]>((acc, p, idx, arr) => {
+                  if (idx > 0 && (p as number) - (arr[idx - 1] as number) > 1) acc.push('…')
+                  acc.push(p)
+                  return acc
+                }, [])
+                .map((p, i) =>
+                  p === '…' ? (
+                    <span key={`ellipsis-${i}`} className="px-2 text-slate-600 text-sm select-none">…</span>
+                  ) : (
+                    <button
+                      key={p}
+                      onClick={() => goToPage(p as number)}
+                      className={`w-8 h-8 rounded-lg text-sm font-semibold transition
+                        ${page === p
+                          ? 'bg-veeva-orange text-white shadow-md shadow-orange-500/30'
+                          : 'bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white'
+                        }`}
+                    >
+                      {p}
+                    </button>
+                  )
+                )
+              }
+            </div>
+
+            <button
+              onClick={() => goToPage(page + 1)}
+              disabled={page === totalPages}
+              className="flex items-center gap-1.5 px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10
+                         rounded-xl text-slate-400 hover:text-white transition disabled:opacity-30 disabled:cursor-not-allowed text-sm"
+            >
+              Next <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
+        )}
+
+        {/* ── Footer ───────────────────────────────────────────────────────── */}
+        <div className="flex items-center justify-between mb-6 text-xs text-slate-600">
           <span>
             {source === 'sheet' ? '📊 Live from Google Sheets' : '💾 Local data (VITE_APPS_SCRIPT_URL not set)'}
           </span>
@@ -220,10 +288,10 @@ export default function LeaderboardPage({ onPlay }: Props) {
           )}
         </div>
 
-        {/* ── Play button (bottom) ─────────────────────────────────────────────── */}
+        {/* ── Play button (bottom) ─────────────────────────────────────────── */}
         <button
           onClick={onPlay}
-          className="w-full mt-6 bg-veeva-orange hover:bg-orange-500 text-white font-black py-4
+          className="w-full bg-veeva-orange hover:bg-orange-500 text-white font-black py-4
                      rounded-2xl transition active:scale-95 flex items-center justify-center gap-2
                      text-lg shadow-lg shadow-orange-500/30"
           style={{ fontFamily: 'Impact, Arial Black, sans-serif' }}
