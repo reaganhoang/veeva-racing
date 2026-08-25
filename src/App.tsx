@@ -1,6 +1,6 @@
-import React, { useState } from 'react'
+import React, { useState, lazy, Suspense } from 'react'
 import Lobby from './components/UI/Lobby'
-import GameScene from './components/Canvas/GameScene'
+const GameScene = lazy(() => import('./components/Canvas/GameScene'))
 import LeaderboardPage from './components/UI/LeaderboardPage'
 
 type Page = 'lobby' | 'leaderboard' | 'game'
@@ -25,19 +25,21 @@ export default function App() {
 
   if (page === 'game' && config) {
     return (
-      <GameScene
-        key={gameKey}
-        playerName={config.name}
-        colorIndex={config.colorIndex}
-        onExit={() => {
-          setPage('lobby')
-          setGameKey(k => k + 1)
-        }}
-        onViewLeaderboard={() => {
-          setPage('leaderboard')
-          setGameKey(k => k + 1)
-        }}
-      />
+      <Suspense fallback={<div style={{ background: '#0B192C', width: '100vw', height: '100vh' }} />}>
+        <GameScene
+          key={gameKey}
+          playerName={config.name}
+          colorIndex={config.colorIndex}
+          onExit={() => {
+            setPage('lobby')
+            setGameKey(k => k + 1)
+          }}
+          onViewLeaderboard={() => {
+            setPage('leaderboard')
+            setGameKey(k => k + 1)
+          }}
+        />
+      </Suspense>
     )
   }
 
