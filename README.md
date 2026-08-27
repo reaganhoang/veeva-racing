@@ -2,6 +2,8 @@
 
 A single-player 3D racing game set around Veeva HQ in Pleasanton, CA. Race 3 laps, collect power-up items, and post your best time to a shared Google Sheets leaderboard.
 
+The game now is available to play on: https://reaganhoang.github.io/veeva-racing
+
 ---
 
 ## Prerequisites
